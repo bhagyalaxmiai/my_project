@@ -7,8 +7,7 @@ FILE_NAME = 'training_data.csv'
 TRAIN_FILE_NAME = 'train.csv'
 TEST_FILE_NAME = 'test.csv'
 
-MONGODB_URL_KEY = ("mongodb+srv://clarityai:N0lTZ4zedDxGbn9N@cluster0.qketnjc.mongodb.net/?retryWrites=true&w=majority"
-                   "&appName=Cluster0&tlsCAFile=isrgrootx1.pem")
+MONGODB_URL_KEY = 'MONGODB_KEY'
 DATABASE_NAME = 'db-customer-churn'
 
 # Data ingestion constant
