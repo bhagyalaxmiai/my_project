@@ -2,9 +2,6 @@ import os
 import logging
 from source.constant.constant_train import ARTIFACT_DIR
 
-
-
-
 def setup_logger(global_timestamp):
     LOG_FILE = f"{global_timestamp}.log"
     logs_path = os.path.join(os.getcwd(),ARTIFACT_DIR + '/' + global_timestamp + '/log')
