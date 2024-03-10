@@ -19,4 +19,3 @@ if __name__ == '__main__':
 
     train_pipeline_obj = TrainPipeline(global_timestamp)
     train_pipeline_obj.run_train_pipeline()
-
