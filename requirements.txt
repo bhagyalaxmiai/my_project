@@ -1,6 +1,8 @@
-pandas
-numpy
-pymongo
-scikit-learn
-seaborn
+pandas==2.1.4
+numpy==1.26.3
+pymongo==4.6.1
+scikit-learn==1.4.0
+seaborn==0.13.1
 category_encoders
+imbalanced-learn==0.12.0
+xgboost==2.0.3

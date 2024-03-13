@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import pickle
+from imblearn.over_sampling import SMOTE
 from sklearn.preprocessing import MinMaxScaler
 from source.exception import ChurnException
 from source.logger import logging
@@ -82,7 +83,7 @@ class DataTransformation:
                     min = temp.loc[temp.index[0], 'Scaler_min']
                     max = temp.loc[temp.index[0], 'Scaler_max']
 
-                    data[col] = (data[col]-min)/ (max-min)
+                    data[col] = (data[col] - min) / (max - min)
 
                 else:
                     print(f"No scaling details available for feature {col}")
@@ -90,12 +91,20 @@ class DataTransformation:
 
         return data
 
-    def export_data_to_csv(self,train_data,test_data):
-        dir_path = os.path.dirname(self.utility_config.dt_train_file_path)
-        os.makedirs(dir_path, exist_ok=True)
+    def oversample_smote(self, data):
+        try:
+            x = data.drop(columns=['Churn'])  # has independent column
+            y = data['Churn']
 
-        train_data.to_csv(self.utility_config.dt_train_file_path, index=False)
-        test_data.to_csv(self.utility_config.dt_test_file_path, index=False)
+            smote = SMOTE()
+
+            x_resampled, y_resampled = smote.fit_resample(x, y)
+
+            resampled_data = pd.concat([pd.DataFrame(x_resampled, columns=x.columns),pd.DataFrame(y_resampled, columns=['Churn'])], axis=1)
+            return resampled_data
+
+        except ChurnException as e:
+            raise e
 
     def export_data_file(self, data, file_name, path):
         try:
@@ -113,10 +122,10 @@ class DataTransformation:
         test_data = pd.read_csv(self.utility_config.dv_test_file_path + '\\' + self.utility_config.test_file_name,
                                 dtype={'SeniorCitizen': 'object'})
 
-        train_data = self.feature_encoding(train_data, target='Churn', save_encoder_path=self.utility_config.dt_multi_class_encoder)
-        test_data = self.feature_encoding(test_data, target='', load_encoder_path=self.utility_config.dt_multi_class_encoder, type='test')
-
-
+        train_data = self.feature_encoding(train_data, target='Churn',
+                                           save_encoder_path=self.utility_config.dt_multi_class_encoder)
+        test_data = self.feature_encoding(test_data, target='',
+                                          load_encoder_path=self.utility_config.dt_multi_class_encoder, type='test')
 
         self.utility_config.target_column = train_data['Churn']
         train_data.drop('Churn', axis=1, inplace=True)
@@ -124,7 +133,9 @@ class DataTransformation:
 
         self.utility_config.target_column = test_data['Churn']
         test_data.drop('Churn', axis=1, inplace=True)
-        test_data = self.min_max_scaling(test_data,type='test')
+        test_data = self.min_max_scaling(test_data, type='test')
+
+        train_data = self.oversample_smote(train_data)
 
         self.export_data_file(train_data, self.utility_config.train_file_name, self.utility_config.dt_train_file_path)
         self.export_data_file(test_data, self.utility_config.test_file_name, self.utility_config.dt_test_file_path)
