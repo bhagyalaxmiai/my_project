@@ -14,7 +14,7 @@ if __name__ == '__main__':
     train_pipeline_config_obj = TrainingPipelineConfig(global_timestamp)
     print(train_pipeline_config_obj.__dict__)
 
-    logging.info(f"training pipeline config created")
+    logging.info(f"Training pipeline config created")
 
     train_pipeline_obj = TrainPipeline(global_timestamp)
     train_pipeline_obj.run_train_pipeline()

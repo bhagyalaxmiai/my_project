@@ -31,7 +31,7 @@ class TrainingPipelineConfig:
         self.train_file_name = constant_train.TRAIN_FILE_NAME
         self.test_file_name = constant_train.TEST_FILE_NAME
 
-        self.dv_train_file_path =os.path.join(self.artifact_dir, constant_train.DV_DIR_NAME)
+        self.dv_train_file_path = os.path.join(self.artifact_dir, constant_train.DV_DIR_NAME)
         self.dv_test_file_path = os.path.join(self.artifact_dir, constant_train.DV_DIR_NAME)
 
         # data transformation
@@ -40,6 +40,11 @@ class TrainingPipelineConfig:
         self.dt_multi_class_encoder = constant_train.DT_ENCODER_PATH
         self.dt_train_file_path = os.path.join(self.artifact_dir, constant_train.DT_DIR_NAME)
         self.dt_test_file_path = os.path.join(self.artifact_dir, constant_train.DT_DIR_NAME)
+
+        # data model and evaluation
+        self.model_path = constant_train.MODEL_PATH
+
+
 
 
 

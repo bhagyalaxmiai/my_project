@@ -1,11 +1,13 @@
 import os
 import pandas as pd
 import pickle
+import numpy as np
 from imblearn.over_sampling import SMOTE
 from sklearn.preprocessing import MinMaxScaler
 from source.exception import ChurnException
 from source.logger import logging
 import category_encoders as ce
+from imblearn.over_sampling import RandomOverSampler
 import warnings
 
 warnings.filterwarnings('ignore')
@@ -93,18 +95,35 @@ class DataTransformation:
 
     def oversample_smote(self, data):
         try:
-            x = data.drop(columns=['Churn'])  # has independent column
-            y = data['Churn']
 
+            np.random.seed(42)
+
+            y = data['Churn']
+            x = data.drop(columns=['Churn'])  # has independent column
+            data.to_csv('smote_data.csv', index=False)
             smote = SMOTE()
 
             x_resampled, y_resampled = smote.fit_resample(x, y)
 
-            resampled_data = pd.concat([pd.DataFrame(x_resampled, columns=x.columns),pd.DataFrame(y_resampled, columns=['Churn'])], axis=1)
-            return resampled_data
+            return pd.concat(
+                [pd.DataFrame(x_resampled, columns=x.columns), pd.DataFrame(y_resampled, columns=['Churn'])], axis=1)
 
         except ChurnException as e:
             raise e
+
+
+
+    def sampling(self, data):
+        # Initialize RandomOverSampler
+        random_oversampler = RandomOverSampler()
+
+        y = data['Churn']
+        x = data.drop(columns=['Churn'])
+
+        # Use RandomOverSampler
+        x_resampled, y_resampled = random_oversampler.fit_resample(x, y)
+
+        return pd.concat([pd.DataFrame(x_resampled, columns=x.columns), pd.DataFrame(y_resampled, columns=['Churn'])])
 
     def export_data_file(self, data, file_name, path):
         try:
@@ -135,7 +154,8 @@ class DataTransformation:
         test_data.drop('Churn', axis=1, inplace=True)
         test_data = self.min_max_scaling(test_data, type='test')
 
-        train_data = self.oversample_smote(train_data)
+        # train_data = self.oversample_smote(train_data)
+        train_data = self.sampling(train_data)
 
         self.export_data_file(train_data, self.utility_config.train_file_name, self.utility_config.dt_train_file_path)
         self.export_data_file(test_data, self.utility_config.test_file_name, self.utility_config.dt_test_file_path)

@@ -72,7 +72,7 @@ class DataIngestion:
                     data.drop(col, axis=1, inplace=True)
                     drop_column.append(col)
 
-            logging.info("Dropped columns :{drop_column}")
+            logging.info(f"Dropped columns :{drop_column}")
             logging.info("start : clean data")
 
             return data
