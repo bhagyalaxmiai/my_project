@@ -40,7 +40,8 @@ DV_DIR_NAME = "data_validation"
 DT_MULTI_CLASS_COL = ['MultipleLines', 'InternetService', 'OnlineSecurity', 'OnlineBackup', 'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies', 'Contract', 'PaymentMethod']
 DT_BINARY_CLASS_COL = ['Partner', 'Dependents', 'PhoneService', 'PaperlessBilling', 'gender']
 DT_ENCODER_PATH = 'source/ml/multi_class_encoder.pkl'
-DT_DIR_NAME: str ="data_transformation"
+DT_DIR_NAME = "data_transformation"
 
 # Data model train and evaluate
 MODEL_PATH = "source/ml/artifact"
+FINAL_MODEL_PATH = "source/ml/final_model"

@@ -93,20 +93,20 @@ class DataTransformation:
 
         return data
 
-    def oversample_smote(self, data):
+    def oversampled_smote(self, data):
         try:
 
             np.random.seed(42)
 
+            X = data.drop(columns=['Churn'])  # has independent column
             y = data['Churn']
-            x = data.drop(columns=['Churn'])  # has independent column
             data.to_csv('smote_data.csv', index=False)
-            smote = SMOTE()
+            smote = SMOTE(random_state=42)
 
-            x_resampled, y_resampled = smote.fit_resample(x, y)
+            x_resampled, y_resampled = smote.fit_resample(X, y)
 
             return pd.concat(
-                [pd.DataFrame(x_resampled, columns=x.columns), pd.DataFrame(y_resampled, columns=['Churn'])], axis=1)
+                [pd.DataFrame(x_resampled, columns=X.columns), pd.DataFrame(y_resampled, columns=['Churn'])], axis=1)
 
         except ChurnException as e:
             raise e
@@ -117,13 +117,15 @@ class DataTransformation:
         # Initialize RandomOverSampler
         random_oversampler = RandomOverSampler()
 
-        y = data['Churn']
         x = data.drop(columns=['Churn'])
+        y = data['Churn']
 
         # Use RandomOverSampler
         x_resampled, y_resampled = random_oversampler.fit_resample(x, y)
-
-        return pd.concat([pd.DataFrame(x_resampled, columns=x.columns), pd.DataFrame(y_resampled, columns=['Churn'])])
+        resampled_data = pd.DataFrame(x_resampled, columns=x.columns)
+        resampled_data['Churn'] = y_resampled
+        return resampled_data
+        # return pd.concat([pd.DataFrame(x_resampled, columns=x.columns), pd.DataFrame(y_resampled, columns=['Churn'])])
 
     def export_data_file(self, data, file_name, path):
         try:
@@ -138,25 +140,29 @@ class DataTransformation:
     def initiate_data_transformation(self):
         train_data = pd.read_csv(self.utility_config.dv_train_file_path + '\\' + self.utility_config.train_file_name,
                                  dtype={'SeniorCitizen': 'object'})
+        train_data.to_csv("data_trans_init_train_data.csv", index=False)
         test_data = pd.read_csv(self.utility_config.dv_test_file_path + '\\' + self.utility_config.test_file_name,
                                 dtype={'SeniorCitizen': 'object'})
-
+        test_data.to_csv("data_trans_init_test_data.csv", index=False)
         train_data = self.feature_encoding(train_data, target='Churn',
                                            save_encoder_path=self.utility_config.dt_multi_class_encoder)
+        train_data.to_csv("train_data_after_Feature_encoding.csv", index=False)
         test_data = self.feature_encoding(test_data, target='',
                                           load_encoder_path=self.utility_config.dt_multi_class_encoder, type='test')
+        test_data.to_csv("test_data_after_Feature_encoding.csv", index=False)
 
         self.utility_config.target_column = train_data['Churn']
         train_data.drop('Churn', axis=1, inplace=True)
         train_data = self.min_max_scaling(train_data, type='train')
+        train_data.to_csv("train_data_after_min_max_scaling.csv", index=False)
 
         self.utility_config.target_column = test_data['Churn']
         test_data.drop('Churn', axis=1, inplace=True)
         test_data = self.min_max_scaling(test_data, type='test')
-
-        # train_data = self.oversample_smote(train_data)
+        test_data.to_csv("test_data_after_min_max_scaling.csv", index=False)
+        # train_data = self.oversampled_smote(train_data)
         train_data = self.sampling(train_data)
-
+        train_data.to_csv("train_data_after_sampling.csv", index=False)
         self.export_data_file(train_data, self.utility_config.train_file_name, self.utility_config.dt_train_file_path)
         self.export_data_file(test_data, self.utility_config.test_file_name, self.utility_config.dt_test_file_path)
 

@@ -43,7 +43,7 @@ class TrainingPipelineConfig:
 
         # data model and evaluation
         self.model_path = constant_train.MODEL_PATH
-
+        self.final_model_path = os.path.join(constant_train.FINAL_MODEL_PATH)
 
 
 
