@@ -13,7 +13,7 @@ class DataValidation:
     def handle_missing_values(self, data, type):
         try:
 
-            if type =='train':
+            if type == 'train':
                 numerical_columns = data.select_dtypes(include=['number']).columns
                 numerical_imputation_values = data[numerical_columns].median()
                 data[numerical_columns] = data[numerical_columns].fillna(numerical_imputation_values)

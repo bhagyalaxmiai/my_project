@@ -6,4 +6,5 @@ seaborn
 category_encoders
 imbalanced-learn
 xgboost
+certifi
 
