@@ -28,12 +28,13 @@ class DataPipeline:
 
     def run_train_pipeline(self):
         self.start_data_ingestion('train')
-        self.start_data_validation()
-        self.start_data_transformation()
-        self.start_model_train_evaluate()
+        # self.start_data_validation()
+        # self.start_data_transformation()
+        # self.start_model_train_evaluate()
 
     def run_predict_pipeline(self):
         self.start_data_ingestion('predict')
-        self.start_data_validation()
-        self.start_data_transformation()
-        self.start_model_train_evaluate()
+        # self.start_data_validation()
+        # self.start_data_transformation()
+        # self.start_model_train_evaluate()
+
