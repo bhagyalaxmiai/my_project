@@ -1,40 +1,37 @@
+import numpy as np
 import os
 import pandas as pd
 import pickle
-import numpy as np
-from imblearn.over_sampling import SMOTE
+import category_encoders as ce
+import warnings
+from imblearn.over_sampling import SMOTE, RandomOverSampler
 from sklearn.preprocessing import MinMaxScaler
 from source.exception import ChurnException
 from source.logger import logging
-import category_encoders as ce
-from imblearn.over_sampling import RandomOverSampler
-import warnings
+from source.utility.utility import export_data_csv, import_csv_file
 
 warnings.filterwarnings('ignore')
 
 
 class DataTransformation:
-
     def __init__(self, utility_config):
         self.utility_config = utility_config
 
-    def feature_encoding(self, data, target, save_encoder_path=None, load_encoder_path=None, type=None):
+    def feature_encoding(self, data, target, save_encoder_path=None, load_encoder_path=None, key=None):
+
         try:
             for col in self.utility_config.dt_binary_class_col:
                 data[col] = data[col].map({'Yes': 1, 'No': 0, 'Male': 1, 'Female': 0})
 
             if target != '':
-                data[self.utility_config.target_column] = data[self.utility_config.target_column].map(
-                    {'Yes': 1, 'No': 0})
+                data[self.utility_config.target_column] = data[self.utility_config.target_column].map({'Yes': 1, 'No': 0})
 
-            if type == 'test':
-                data[self.utility_config.target_column] = data[self.utility_config.target_column].map(
-                    {'Yes': 1, 'No': 0})
+            if key == 'test':
+                data[self.utility_config.target_column] = data[self.utility_config.target_column].map({'Yes': 1, 'No': 0})
 
             if save_encoder_path:
                 encoder = ce.TargetEncoder(cols=self.utility_config.dt_multi_class_col)
-                data_encoded = encoder.fit_transform(data[self.utility_config.dt_multi_class_col],
-                                                     data[self.utility_config.target_column])
+                data_encoded = encoder.fit_transform(data[self.utility_config.dt_multi_class_col], data[self.utility_config.target_column])
 
                 with open(save_encoder_path, 'wb') as f:
                     pickle.dump(encoder, f)
@@ -52,25 +49,26 @@ class DataTransformation:
         except ChurnException as e:
             raise e
 
-    def min_max_scaling(self, data, type=None):
-        if type == 'train':
+    def min_max_scaling(self, data, key=None):
 
-            numeric_columns = list(data.select_dtypes(include=['float64', 'int64']).columns)
+        if key == 'train':
+
+            numeric_columns = data.select_dtypes(include=['float64', 'int64']).columns
 
             scaler = MinMaxScaler()
 
             scaler.fit(data[numeric_columns])
 
-            scaler_details = pd.DataFrame({'feature': numeric_columns,
-                                           'Scaler_min': scaler.data_min_,
-                                           'Scaler_max': scaler.data_max_})
+            scaler_details = pd.DataFrame({'Feature': numeric_columns,
+                                           'Scaler_Min': scaler.data_min_,
+                                           'Scaler_Max': scaler.data_max_
+                                           })
             scaler_details.to_csv('source/ml/scaler_details.csv', index=False)
 
             scaled_data = scaler.transform(data[numeric_columns])
+
             data.loc[:, numeric_columns] = scaled_data
             data['Churn'] = self.utility_config.target_column
-
-            print('done')
 
         else:
             scaler_details = pd.read_csv('source/ml/scaler_details.csv')
@@ -78,40 +76,39 @@ class DataTransformation:
             for col in data.select_dtypes(include=['float64', 'int64']).columns:
                 data[col] = data[col].astype('float64')
 
-                temp = scaler_details[scaler_details['feature'] == col]
+                temp = scaler_details[scaler_details['Feature'] == col]
 
                 if not temp.empty:
 
-                    min = temp.loc[temp.index[0], 'Scaler_min']
-                    max = temp.loc[temp.index[0], 'Scaler_max']
+                    min = temp.loc[temp.index[0], 'Scaler_Min']
+                    max = temp.loc[temp.index[0], 'Scaler_Max']
 
-                    data[col] = (data[col] - min) / (max - min)
+                    data[col] = (data[col]-min) / (max-min)
 
                 else:
-                    print(f"No scaling details available for feature {col}")
+                    print(f"No scaling details available for feature: {col}")
+
             data['Churn'] = self.utility_config.target_column
 
         return data
 
-    def oversampled_smote(self, data):
-        try:
-
-            np.random.seed(42)
-
-            X = data.drop(columns=['Churn'])  # has independent column
-            y = data['Churn']
-            data.to_csv('smote_data.csv', index=False)
-            smote = SMOTE(random_state=42)
-
-            x_resampled, y_resampled = smote.fit_resample(X, y)
-
-            return pd.concat(
-                [pd.DataFrame(x_resampled, columns=X.columns), pd.DataFrame(y_resampled, columns=['Churn'])], axis=1)
-
-        except ChurnException as e:
-            raise e
-
-
+    # def oversampled_smote(self, data):
+    #     try:
+    #
+    #         np.random.seed(42)
+    #
+    #         X = data.drop(columns=['Churn'])  # has independent column
+    #         y = data['Churn']
+    #         data.to_csv('smote_data.csv', index=False)
+    #         smote = SMOTE(random_state=42)
+    #
+    #         x_resampled, y_resampled = smote.fit_resample(X, y)
+    #
+    #         return pd.concat(
+    #             [pd.DataFrame(x_resampled, columns=X.columns), pd.DataFrame(y_resampled, columns=['Churn'])], axis=1)
+    #
+    #     except ChurnException as e:
+    #         raise e
 
     def sampling(self, data):
         # Initialize RandomOverSampler
@@ -129,41 +126,42 @@ class DataTransformation:
 
     def export_data_file(self, data, file_name, path):
         try:
+
             dir_path = os.path.join(path)
             os.makedirs(dir_path, exist_ok=True)
 
-            data.to_csv(path + '\\' + file_name, index=False)
-            logging.info("Data transformation files exported")
+            data.to_csv(path+'\\'+file_name, index=False)
+
+            logging.info('data transformation file exported')
+
         except ChurnException as e:
             raise e
 
-    def initiate_data_transformation(self):
-        train_data = pd.read_csv(self.utility_config.dv_train_file_path + '\\' + self.utility_config.train_file_name,
-                                 dtype={'SeniorCitizen': 'object'})
-        train_data.to_csv("data_trans_init_train_data.csv", index=False)
-        test_data = pd.read_csv(self.utility_config.dv_test_file_path + '\\' + self.utility_config.test_file_name,
-                                dtype={'SeniorCitizen': 'object'})
-        test_data.to_csv("data_trans_init_test_data.csv", index=False)
-        train_data = self.feature_encoding(train_data, target='Churn',
-                                           save_encoder_path=self.utility_config.dt_multi_class_encoder)
-        train_data.to_csv("train_data_after_Feature_encoding.csv", index=False)
-        test_data = self.feature_encoding(test_data, target='',
-                                          load_encoder_path=self.utility_config.dt_multi_class_encoder, type='test')
-        test_data.to_csv("test_data_after_Feature_encoding.csv", index=False)
+    def initiate_data_transformation(self, key):
 
-        self.utility_config.target_column = train_data['Churn']
-        train_data.drop('Churn', axis=1, inplace=True)
-        train_data = self.min_max_scaling(train_data, type='train')
-        train_data.to_csv("train_data_after_min_max_scaling.csv", index=False)
+        if key == 'train':
+            train_data = import_csv_file(self.utility_config.train_file_name, self.utility_config.train_dv_train_file_path)
+            test_data = import_csv_file(self.utility_config.test_file_name, self.utility_config.train_dv_test_file_path)
 
-        self.utility_config.target_column = test_data['Churn']
-        test_data.drop('Churn', axis=1, inplace=True)
-        test_data = self.min_max_scaling(test_data, type='test')
-        test_data.to_csv("test_data_after_min_max_scaling.csv", index=False)
-        # train_data = self.oversampled_smote(train_data)
-        train_data = self.sampling(train_data)
-        train_data.to_csv("train_data_after_sampling.csv", index=False)
-        self.export_data_file(train_data, self.utility_config.train_file_name, self.utility_config.dt_train_file_path)
-        self.export_data_file(test_data, self.utility_config.test_file_name, self.utility_config.dt_test_file_path)
+            train_data = self.feature_encoding(train_data, target='Churn', save_encoder_path=self.utility_config.dt_multi_class_encoder, key='train')
+            test_data = self.feature_encoding(test_data, target='', load_encoder_path=self.utility_config.dt_multi_class_encoder, key='test')
 
-        print('done')
+            self.utility_config.target_column = train_data['Churn']
+            train_data.drop('Churn', axis=1, inplace=True)
+            train_data = self.min_max_scaling(train_data, key='train')
+
+            self.utility_config.target_column = test_data['Churn']
+            test_data.drop('Churn', axis=1, inplace=True)
+            test_data = self.min_max_scaling(test_data, key='test')
+
+            # train_data = self.oversample_smote(train_data)
+            train_data = self.sampling(train_data)
+            export_data_csv(train_data, self.utility_config.train_file_name,  self.utility_config.train_dt_train_file_path)
+            export_data_csv(test_data, self.utility_config.test_file_name, self.utility_config.train_dt_test_file_path)
+
+        if key == 'predict':
+            predict_data = import_csv_file(self.utility_config.predict_file, self.utility_config.predict_dv_file_path)
+            predict_data = self.feature_encoding(predict_data, target='', load_encoder_path=self.utility_config.dt_multi_class_encoder, key='predict')
+            predict_data = self.min_max_scaling(predict_data, key='predict')
+
+            export_data_csv(predict_data, self.utility_config.predict_file, self.utility_config.predict_dt_file_path)

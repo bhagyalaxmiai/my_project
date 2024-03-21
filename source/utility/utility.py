@@ -38,4 +38,5 @@ def export_data_csv(data, filename, file_path):
         data.to_csv(os.path.join(file_path, filename), index=False)
 
     except ChurnException as e:
+        print(f"path does not exist: {file_path}")
         raise e
