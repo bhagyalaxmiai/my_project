@@ -2,6 +2,7 @@ from source.component.data_ingestion import DataIngestion
 from source.component.data_validation import DataValidation
 from source.component.data_transformation import DataTransformation
 from source.component.model_train_evaluate import ModelTrainEvaluate
+from source.component.model_predict import ModelPrediction
 from source.entity.config_entity import PipelineConfig
 
 
@@ -26,6 +27,10 @@ class DataPipeline:
         model_train_eval_obj = ModelTrainEvaluate(self.utility_config)
         model_train_eval_obj.initiate_model_training()
 
+    def start_model_prediction(self):
+        model_predict_obj = ModelPrediction(self.utility_config)
+        model_predict_obj.initiate_model_prediction()
+
     def run_train_pipeline(self):
         self.start_data_ingestion('train')
         self.start_data_validation('train')
@@ -36,4 +41,4 @@ class DataPipeline:
         self.start_data_ingestion('predict')
         self.start_data_validation('predict')
         self.start_data_transformation('predict')
-        # self.start_model_train_evaluate()
+        self.start_model_prediction()
