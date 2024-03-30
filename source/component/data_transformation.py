@@ -156,6 +156,7 @@ class DataTransformation:
 
             # train_data = self.oversample_smote(train_data)
             train_data = self.sampling(train_data)
+            test_data = test_data.iloc[:-3]
             export_data_csv(train_data, self.utility_config.train_file_name,  self.utility_config.train_dt_train_file_path)
             export_data_csv(test_data, self.utility_config.test_file_name, self.utility_config.train_dt_test_file_path)
 

@@ -54,7 +54,7 @@ class ModelTrainEvaluate:
             # "KNeighborsClassifier": KNeighborsClassifier(),
             "XGBClassifier": XGBClassifier()
         }
-        self.model_evaluation_report = pd.DataFrame(columns =["model_name","accuracy","precision"," recall","f1","class_report","confu_matrix"])
+        self.model_evaluation_report = pd.DataFrame(columns=["model_name","accuracy","precision"," recall","f1","class_report","confu_matrix"])
     def model_training(self, train_data, test_data):
         try:
             x_train = train_data.drop('Churn', axis=1)
@@ -87,7 +87,7 @@ class ModelTrainEvaluate:
 
             logging.info(f"model : {model_name},accuracy:{accuracy},precision:{precision},recall:{recall},f1 :{f1},class_report:{class_report},confu_matrix:{confu_matrix}])")
             new_row =[model_name, accuracy, precision, recall, f1, class_report, confu_matrix]
-            self.model_evaluation_report=self.model_evaluation_report._append(pd.Series(new_row,index=self.model_evaluation_report.columns), ignore_index=True)
+            self.model_evaluation_report = self.model_evaluation_report._append(pd.Series(new_row,index=self.model_evaluation_report.columns), ignore_index=True)
 
         except ChurnException as e:
             raise e
